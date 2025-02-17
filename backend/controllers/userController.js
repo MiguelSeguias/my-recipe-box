@@ -145,4 +145,37 @@ export const createUserControllers = (app) => {
       console.log(JSON.stringify(error, null, 2));
     }
   });
+
+   //Parte MASS
+
+ // Ruta para "olvidé contraseña"  
+app.post('/forgot-password', async (req, res) => {  
+  const { username } = req.body;  
+
+  // Validar si el usuario existe  
+  const usuario = await User.findOne({ username });  
+  if (!usuario) {  
+      return res.status(400).json({ error: 'User not found' });  
+  }  
+
+  // Generar un código aleatorio de 5 dígitos  
+  const codigo = Array.from({ length: 5 }, () => Math.floor(Math.random() * 10)).join('');  
+
+  // Enviar el código al correo del usuario  
+  const mailOptions = {  
+      from: process.env.EMAIL_USER,  
+      to: usuario.email, // Suponiendo que tienes el correo del usuario en la base de datos  
+      subject: 'Password reset code',  
+      text: `Your password reset code is: ${codigo}`,  
+  };  
+
+  try {  
+      await transporter.sendMail(mailOptions);  
+      // Aquí podrías guardar el código en la base de datos para su posterior validación o simplemente  
+      // informar que se ha enviado el código al correo  
+      res.json({ message: 'Code sent to email' });  
+  } catch (error) {  
+      return res.status(500).json({ error: 'Error sending email' });  
+  }  
+});
 }
